@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>C++ in the browser</title>
+<style>
+:root {
+    --bg: #12141a;
+    --panel: #191c24;
+    --edge: #2a2f3c;
+    --ink: #d5dae5;
+    --dim: #7a8296;
+    --accent: #8ab4ff;
+    --ok: #7ddba0;
+    --bad: #ff8a80;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--ink);
+    font: 14px/1.5 var(--mono);
+}
+
+header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--edge);
+    background: var(--panel);
+}
+h1 {
+    margin: 0 12px 0 0;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .04em;
+}
+h1 span { color: var(--dim); font-weight: 400; }
+
+button {
+    font: inherit;
+    color: var(--ink);
+    background: #232833;
+    border: 1px solid var(--edge);
+    border-radius: 4px;
+    padding: 5px 12px;
+    cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: .4; cursor: default; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+#run { background: #24405f; border-color: #35608f; }
+
+.phase {
+    color: var(--accent);
+    font-weight: 600;
+}
+.phase-done { color: var(--dim); }
+.phase-ok   { color: var(--ok); font-weight: 600; }
+.phase-bad  { color: var(--bad); font-weight: 600; }
+
+.examples { display: flex; gap: 6px; margin-left: auto; }
+.examples button { font-size: 12px; padding: 4px 9px; color: var(--dim); }
+
+main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: 0; }
+@media (max-width: 760px) { main { grid-template-columns: 1fr; } }
+
+.pane { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.pane + .pane { border-left: 1px solid var(--edge); }
+@media (max-width: 760px) { .pane + .pane { border-left: 0; border-top: 1px solid var(--edge); } }
+
+.bar {
+    padding: 6px 14px;
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--dim);
+    border-bottom: 1px solid var(--edge);
+    display: flex;
+    justify-content: space-between;
+}
+
+textarea, pre {
+    flex: 1;
+    margin: 0;
+    padding: 14px;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: inherit;
+    tab-size: 2;
+    overflow: auto;
+    resize: none;
+}
+textarea:focus, pre:focus { outline: 1px solid var(--accent); outline-offset: -1px; }
+pre { white-space: pre-wrap; word-break: break-word; }
+
+#stdin { flex: 0 0 68px; border-top: 1px solid var(--edge); }
+
+#status { font-variant-numeric: tabular-nums; text-transform: none; letter-spacing: 0; }
+#status.busy { color: var(--accent); }
+#status.ok   { color: var(--ok); }
+#status.bad  { color: var(--bad); }
+</style>
+</head>
+<body>
+
+    <header>
+        <h1>C++ <span>— clang + lld, running in this tab</span></h1>
+
+        <button id="run">Run</button>
+        <button id="stop" disabled>Stop</button>
+
+        <div class="examples">
+            <button data-example="hello">hello</button>
+            <button data-example="stdin">stdin</button>
+            <button data-example="error">error</button>
+            <button data-example="hang">infinite loop</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="pane">
+            <div class="bar"><span>main.cc</span><span>ctrl + enter to run</span></div>
+            <textarea id="source" spellcheck="false" aria-label="C++ source"></textarea>
+            <div class="bar"><span>stdin</span></div>
+            <textarea id="stdin" spellcheck="false" aria-label="Standard input"></textarea>
+        </div>
+
+        <div class="pane">
+            <div class="bar"><span>output</span><span id="status">Ready</span></div>
+            <pre id="output" tabindex="0" aria-live="polite"></pre>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>C++ in the browser</title>
+        <style>
+:root {
+    --bg: #12141a;
+    --panel: #191c24;
+    --edge: #2a2f3c;
+    --ink: #d5dae5;
+    --dim: #7a8296;
+    --accent: #8ab4ff;
+    --ok: #7ddba0;
+    --bad: #ff8a80;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--ink);
+    font: 14px/1.5 var(--mono);
+}
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--edge);
+            background: var(--panel);
+        }
+        h1 {
+            margin: 0 12px 0 0;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: .04em;
+        }
+        h1 span { color: var(--dim); font-weight: 400; }
+
+        button {
+            font: inherit;
+            color: var(--ink);
+            background: #232833;
+            border: 1px solid var(--edge);
+            border-radius: 4px;
+            padding: 5px 12px;
+            cursor: pointer;
+        }
+        button:hover:not(:disabled) { border-color: var(--accent); }
+        button:disabled { opacity: .4; cursor: default; }
+        button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+        #run { background: #24405f; border-color: #35608f; }
+
+        .phase {
+            color: var(--accent);
+            font-weight: 600;
+        }
+        .phase-done { color: var(--dim); }
+        .phase-ok   { color: var(--ok); font-weight: 600; }
+        .phase-bad  { color: var(--bad); font-weight: 600; }
+
+        .examples { display: flex; gap: 6px; margin-left: auto; }
+        .examples button { font-size: 12px; padding: 4px 9px; color: var(--dim); }
+
+        main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: 0; }
+        @media (max-width: 760px) { main { grid-template-columns: 1fr; } }
+
+        .pane { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+        .pane + .pane { border-left: 1px solid var(--edge); }
+        @media (max-width: 760px) { .pane + .pane { border-left: 0; border-top: 1px solid var(--edge); } }
+
+        .bar {
+            padding: 6px 14px;
+            font-size: 11px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--dim);
+            border-bottom: 1px solid var(--edge);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        textarea, pre {
+            flex: 1;
+            margin: 0;
+            padding: 14px;
+            border: 0;
+            background: transparent;
+            color: var(--ink);
+            font: inherit;
+            tab-size: 2;
+            overflow: auto;
+            resize: none;
+        }
+        textarea:focus, pre:focus { outline: 1px solid var(--accent); outline-offset: -1px; }
+        pre { white-space: pre-wrap; word-break: break-word; }
+
+        #stdin { flex: 0 0 68px; border-top: 1px solid var(--edge); }
+
+        #status { font-variant-numeric: tabular-nums; text-transform: none; letter-spacing: 0; }
+        #status.busy { color: var(--accent); }
+        #status.ok   { color: var(--ok); }
+        #status.bad  { color: var(--bad); }
+        </style>
+    </head>
+    <body>
+
+        <header>
+            <h1>C++ <span>— clang + lld, running in this tab</span></h1>
+
+            <button id="run">Run</button>
+            <button id="stop" disabled>Stop</button>
+
+            <div class="examples">
+                <button data-example="hello">hello</button>
+                <button data-example="stdin">stdin</button>
+                <button data-example="error">error</button>
+                <button data-example="hang">infinite loop</button>
+            </div>
+        </header>
+
+        <main>
+            <div class="pane">
+                <div class="bar"><span>main.cc</span><span>ctrl + enter to run</span></div>
+                <textarea id="source" spellcheck="false" aria-label="C++ source"></textarea>
+                <div class="bar"><span>stdin</span></div>
+                <textarea id="stdin" spellcheck="false" aria-label="Standard input"></textarea>
+            </div>
+
+            <div class="pane">
+                <div class="bar"><span>output</span><span id="status">Ready</span></div>
+                <pre id="output" tabindex="0" aria-live="polite"></pre>
+            </div>
+        </main>
+
+        <script src="app.js"></script>
+    </body>
+</html>
+
+
+
+
+
+
+
+
+
+
