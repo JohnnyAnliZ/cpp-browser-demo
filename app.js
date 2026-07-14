@@ -124,11 +124,11 @@ function setStatus(text, className=' '){
 //instantiate a client, defining the outputs
 const client = new CompilerClient({
     onWrite: emitText,
-    onPhase: (phase, pervious, elapsed) => {
-        if(previous) emit Banner(`   ${PHASE_LABEL[previous].toLowerCase()} finished in ${secs(elapsed)}\n`, 'phase-done');
+    onPhase: (phase, previous, elapsed) => {
+        if(previous) emitBanner(`   ${PHASE_LABEL[previous].toLowerCase()} finished in ${ms_to_s(elapsed)}\n`, 'phase-done');
         if(phase){
-            emitBanner(`\n ${PHASE_LABLE[phase]}...\n`, 'phase');
-            setStatus(`${PHASE_LABLE[phase]}...\n`, 'busy');
+            emitBanner(`\n ${PHASE_LABEL[phase]}...\n`, 'phase');
+            setStatus(`${PHASE_LABEL[phase]}...\n`, 'busy');
         }
     },
     onDone: (result) => {
