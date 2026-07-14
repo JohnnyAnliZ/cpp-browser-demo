@@ -8,6 +8,7 @@
 self.importScripts('shared.js');
 
 let api = null;
+let currentId = null;
 
 const post = (msg) => self.postMessage(msg);
 
@@ -15,7 +16,7 @@ const apiOptions = {
     async readBuffer(filename) {
         const response = await fetch(filename);
         if(!response.ok) throw new Error(`could not fetch ${filename} (${response.status})`);
-        return response.arryaBuffer();    
+        return response.arrayBuffer();
     },
     async compileStreaming(filename) {
         const response = await fetch(filename);
@@ -23,11 +24,12 @@ const apiOptions = {
         return WebAssembly.compile(await response.arrayBuffer());
     },
 
-    hostWrite(text) { post({ kind: 'write',  text }); },
+    hostWrite(text) { post({ id: currentId, kind: 'write',  text }); },
 };
 
 self.addEventListener('message', async (event) => {
-    const { id, kind, sounce, stdin } = event.data;
+    const { id, kind, source, stdin } = event.data;
+    currentId = id;
     try {
         //Constructing API starts the fetching of memfs and untarring of the sysroot.
         //It's done lazily so a terminated worker only does this when it's used again

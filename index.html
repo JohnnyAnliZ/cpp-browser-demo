@@ -66,9 +66,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .phase-ok   { color: var(--ok); font-weight: 600; }
 .phase-bad  { color: var(--bad); font-weight: 600; }
 
-.examples { display: flex; gap: 6px; margin-left: auto; }
-.examples button { font-size: 12px; padding: 4px 9px; color: var(--dim); }
-
 main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; min-height: 0; }
 @media (max-width: 760px) { main { grid-template-columns: 1fr; } }
 
@@ -117,19 +114,23 @@ pre { white-space: pre-wrap; word-break: break-word; }
 
         <button id="run">Run</button>
         <button id="stop" disabled>Stop</button>
-
-        <div class="examples">
-            <button data-example="hello">hello</button>
-            <button data-example="stdin">stdin</button>
-            <button data-example="error">error</button>
-            <button data-example="hang">infinite loop</button>
-        </div>
     </header>
 
     <main>
         <div class="pane">
             <div class="bar"><span>main.cc</span><span>ctrl + enter to run</span></div>
-            <textarea id="source" spellcheck="false" aria-label="C++ source"></textarea>
+            <textarea id="source" spellcheck="false" aria-label="C++ source">
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+
+int main() {
+    std::string name;
+    std::getline(std::cin, name);
+    if (name.empty()) name = "world";
+    std::cout &lt;&lt; "hello, " &lt;&lt; name &lt;&lt; "!" &lt;&lt; std::endl;
+    return 0;
+}
+</textarea>
             <div class="bar"><span>stdin</span></div>
             <textarea id="stdin" spellcheck="false" aria-label="Standard input"></textarea>
         </div>
@@ -142,3 +143,4 @@ pre { white-space: pre-wrap; word-break: break-word; }
 
     <script src="app.js"></script>
 </body>
+</html>

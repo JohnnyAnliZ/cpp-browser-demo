@@ -156,6 +156,13 @@ function run(){
 runBtn.addEventListener('click', run);
 stopBtn.addEventListener('click', () => client.stop());
 
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !runBtn.disabled) {
+        e.preventDefault();
+        run();
+    }
+});
+
 
 
 
