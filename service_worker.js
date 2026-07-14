@@ -1,7 +1,7 @@
 //manages the cache used to serve the files and intercept fetch request to serve without going to the network
 
 //since the app is cache-first, BUMP this every github pages deploy to force a reload of the cache
-const CACHE_NAME = 'v1';
+const CACHE_NAME = 'v2';
 const PRECACHE = [
     './',
     './index.html',
@@ -19,7 +19,7 @@ const PRECACHE = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME)
-        .then((cache) => cache.addALL(PRECACHE)).
+        .then((cache) => cache.addAll(PRECACHE))
         .then(() => self.skipWaiting())
     );
 });
